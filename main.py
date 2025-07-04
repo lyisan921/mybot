@@ -1,3 +1,12 @@
+from telegram import (
+    Update,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+    KeyboardButton,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
+
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
