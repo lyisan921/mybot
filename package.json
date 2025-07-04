@@ -1,0 +1,11 @@
+{
+  "name": "nutri-bot",
+  "version": "1.0.0",
+  "main": "nutri_bot.py",
+  "scripts": {
+    "start": "python3 nutri_bot.py"
+  },
+  "engines": {
+    "python": "3.10"
+  }
+}

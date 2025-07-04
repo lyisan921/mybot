@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "nutri-bot"
+version = "0.1.0"
+description = "Telegram bot for nutrition"
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-telegram-bot = "20.5"
+APScheduler = "3.10.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

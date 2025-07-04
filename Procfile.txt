@@ -1,0 +1,1 @@
+start: python3 nutri_bot.py
