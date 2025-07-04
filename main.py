@@ -484,32 +484,35 @@ async def info_questions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def info_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     text = update.message.text
+
     if text == '📋 Как проходит работа':
         return await info_work(update, context)
     elif text == '💰 Узнать цены':
         return await info_prices(update, context)
     elif text == '❓ Задать вопрос':
         return await info_questions(update, context)
-elif text == '📝 Пройти тест готовности':
-    test_score[update.effective_chat.id] = 0
-    await update.message.reply_text(
-        "📝 Тест на готовность к личному ведению\n\n"
-        "Сейчас я задам тебе 5 вопросов, которые помогут понять, насколько тебе подойдет персональное сопровождение в достижении целей.\n"
-        "Отвечай честно — так результат будет наиболее точным 😊\n\n"
-        "Готов(а) начать?",
-        reply_markup=ReplyKeyboardMarkup([['✅ Да, начать тест', '⬅️ Назад']], resize_keyboard=True, one_time_keyboard=True)
-    )
-    return TEST_START
+    elif text == '📝 Пройти тест готовности':
+        test_score[update.effective_chat.id] = 0
+        await update.message.reply_text(
+            "📝 Тест на готовность к личному ведению\n\n"
+            "Сейчас я задам тебе 5 вопросов, которые помогут понять, насколько тебе подойдет персональное сопровождение в достижении целей.\n"
+            "Отвечай честно — так результат будет наиболее точным 😊\n\n"
+            "Готов(а) начать?",
+            reply_markup=ReplyKeyboardMarkup(
+                [['✅ Да, начать тест', '⬅️ Назад']],
+                resize_keyboard=True,
+                one_time_keyboard=True
+            )
+        )
+        return TEST_START
+    elif text == '⬅️ Назад':
+        return await info_main(update, context)
+    elif text == '📱 Главное меню':
+        return await start(update, context)
+    else:
+        await update.message.reply_text("Пожалуйста, выбери одну из кнопок")
+        return INFO_MAIN
 
-elif text == '⬅️ Назад':
-    return await info_main(update, context)
-
-elif text == '📱 Главное меню':
-    return await start(update, context)
-
-else:
-    await update.message.reply_text("Пожалуйста, выбери одну из кнопок")
-    return INFO_MAIN
 
 # --- Начать заново ---
 
