@@ -1,8 +1,16 @@
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import (
-    ApplicationBuilder, CommandHandler, MessageHandler, filters,
+    Application, CommandHandler, MessageHandler, filters,
     ConversationHandler, ContextTypes
 )
+import logging
+
+# Настройка логирования
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 # Состояния
 (
@@ -63,6 +71,9 @@ async def choosing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     elif text == '❓ Узнать про личное ведение':
         return await info_main(update, context)
+
+    elif text == '🔄 Начать заново' or text == '📱 Главное меню':
+        return await start(update, context)
 
     else:
         await update.message.reply_text(
@@ -236,12 +247,14 @@ async def test_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             ], resize_keyboard=True, one_time_keyboard=True)
         )
         return TEST_Q1
-    elif text == '⬅️ Назад в меню':
-        await start(update, context)
-        return CHOOSING
+    elif text == '⬅️ Назад в меню' or text == '⬅️ Назад':
+        return await start(update, context)
     else:
-        await update.message.reply_text("Пожалуйста, выбери из кнопок")
-        return TEST_START
+        await update.message.reply_text(
+            "Пожалуйста, выбери из кнопок или вернись в главное меню",
+            reply_markup=main_menu_markup
+        )
+        return CHOOSING
 
 async def test_q1(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     answers = {
@@ -251,8 +264,11 @@ async def test_q1(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     }
     ans = update.message.text.strip().lower()
     if ans not in answers:
-        await update.message.reply_text("Пожалуйста, выбери из кнопок")
-        return TEST_Q1
+        await update.message.reply_text(
+            "Пожалуйста, выбери из кнопок или вернись в главное меню",
+            reply_markup=main_menu_markup
+        )
+        return CHOOSING
     test_score[update.effective_chat.id] += answers[ans]
     await update.message.reply_text(
         "🤯 Вопрос 2/5\n\nЕсть ли у тебя ощущение, что ты всё знаешь о правильном питании, но не можешь внедрить в жизнь?",
@@ -269,8 +285,11 @@ async def test_q2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     }
     ans = update.message.text.strip().lower()
     if ans not in answers:
-        await update.message.reply_text("Пожалуйста, выбери из кнопок")
-        return TEST_Q2
+        await update.message.reply_text(
+            "Пожалуйста, выбери из кнопок или вернись в главное меню",
+            reply_markup=main_menu_markup
+        )
+        return CHOOSING
     test_score[update.effective_chat.id] += answers[ans]
     await update.message.reply_text(
         "🤝 Вопрос 3/5\n\nХочется ли тебе поддержки, мотивации или контроля со стороны?",
@@ -287,8 +306,11 @@ async def test_q3(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     }
     ans = update.message.text.strip().lower()
     if ans not in answers:
-        await update.message.reply_text("Пожалуйста, выбери из кнопок")
-        return TEST_Q3
+        await update.message.reply_text(
+            "Пожалуйста, выбери из кнопок или вернись в главное меню",
+            reply_markup=main_menu_markup
+        )
+        return CHOOSING
     test_score[update.effective_chat.id] += answers[ans]
     await update.message.reply_text(
         "📊 Вопрос 4/5\n\nГотов(а) ли ты тратить 2-3 минуты в день на ведение пищевого дневника и отчёт о прогрессе?",
@@ -305,8 +327,11 @@ async def test_q4(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     }
     ans = update.message.text.strip().lower()
     if ans not in answers:
-        await update.message.reply_text("Пожалуйста, выбери из кнопок")
-        return TEST_Q4
+        await update.message.reply_text(
+            "Пожалуйста, выбери из кнопок или вернись в главное меню",
+            reply_markup=main_menu_markup
+        )
+        return CHOOSING
     test_score[update.effective_chat.id] += answers[ans]
     await update.message.reply_text(
         "🎯 Вопрос 5/5\n\nУ тебя есть чёткая, конкретная цель? (например: \"похудеть на 5 кг к лету\" вместо \"хочу похудеть\")",
@@ -323,8 +348,11 @@ async def test_q5(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     }
     ans = update.message.text.strip().lower()
     if ans not in answers:
-        await update.message.reply_text("Пожалуйста, выбери из кнопок")
-        return TEST_Q5
+        await update.message.reply_text(
+            "Пожалуйста, выбери из кнопок или вернись в главное меню",
+            reply_markup=main_menu_markup
+        )
+        return CHOOSING
     test_score[update.effective_chat.id] += answers[ans]
 
     score = test_score[update.effective_chat.id]
@@ -355,7 +383,8 @@ async def test_q5(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             ], resize_keyboard=True, one_time_keyboard=True)
         )
 
-    del test_score[update.effective_chat.id]
+    if update.effective_chat.id in test_score:
+        del test_score[update.effective_chat.id]
     return CHOOSING
 
 # --- Ветка информации о личном ведении ---
@@ -461,24 +490,26 @@ async def info_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         return await info_prices(update, context)
     elif text == '❓ Задать вопрос':
         return await info_questions(update, context)
-    elif text == '📝 Пройти тест готовности':
-        test_score[update.effective_chat.id] = 0
-        await update.message.reply_text(
-            "📝 Тест на готовность к личному ведению\n\n"
-            "Сейчас я задам тебе 5 вопросов, которые помогут понять, насколько тебе подойдет персональное сопровождение в достижении целей.\n"
-            "Отвечай честно — так результат будет наиболее точным 😊\n\n"
-            "Готов(а) начать?",
-            reply_markup=ReplyKeyboardMarkup([['✅ Да, начать тест', '⬅️ Назад']], resize_keyboard=True, one_time_keyboard=True)
-        )
-        return TEST_START
-    elif text == '⬅️ Назад':
-        return await info_main(update, context)
-    elif text == '📱 Главное меню':
-        await start(update, context)
-        return CHOOSING
-    else:
-        await update.message.reply_text("Пожалуйста, выбери одну из кнопок")
-        return INFO_MAIN
+elif text == '📝 Пройти тест готовности':
+    test_score[update.effective_chat.id] = 0
+    await update.message.reply_text(
+        "📝 Тест на готовность к личному ведению\n\n"
+        "Сейчас я задам тебе 5 вопросов, которые помогут понять, насколько тебе подойдет персональное сопровождение в достижении целей.\n"
+        "Отвечай честно — так результат будет наиболее точным 😊\n\n"
+        "Готов(а) начать?",
+        reply_markup=ReplyKeyboardMarkup([['✅ Да, начать тест', '⬅️ Назад']], resize_keyboard=True, one_time_keyboard=True)
+    )
+    return TEST_START
+
+elif text == '⬅️ Назад':
+    return await info_main(update, context)
+
+elif text == '📱 Главное меню':
+    return await start(update, context)
+
+else:
+    await update.message.reply_text("Пожалуйста, выбери одну из кнопок")
+    return INFO_MAIN
 
 # --- Начать заново ---
 
