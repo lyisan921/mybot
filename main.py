@@ -1,4 +1,3 @@
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -6,8 +5,6 @@ from telegram.ext import (
     ConversationHandler,
     ContextTypes,
     filters
-)
-    ConversationHandler, ContextTypes
 )
 import logging
 
